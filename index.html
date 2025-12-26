@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hóa Học 10 - Thử Tài Giáng Sinh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #c0392b;
+            --green: #27ae60;
+            --gold: #f1c40f;
+            --white: #ffffff;
+            --bg-dark: #2c3e50;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: url('https://images.unsplash.com/photo-1512389142860-9c449e58a543?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #333;
+        }
+
+        /* --- SỬA LỖI KHÔNG BẤM ĐƯỢC NÚT --- */
+        /* Lớp phủ và tuyết sẽ không chặn chuột */
+        .overlay, #snow-container, .snowflake {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* QUAN TRỌNG: Cho phép click xuyên qua */
+        }
+        
+        .overlay {
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        /* Khung game - Tăng z-index để nổi lên trên cùng */
+        .game-card {
+            position: relative;
+            z-index: 100; /* Cao hơn tất cả các lớp khác */
+            background: rgba(255, 255, 255, 0.96);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.6);
+            border: 4px solid var(--red);
+            overflow-y: auto;
+            text-align: center;
+            pointer-events: auto; /* Đảm bảo nhận được click chuột */
+        }
+        /* ------------------------------------- */
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            color: var(--red);
+            font-size: 3rem;
+            margin: 0 0 20px 0;
+            text-shadow: 2px 2px var(--gold);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: var(--green);
+            color: white;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .question-area { margin-bottom: 20px; }
+        
+        .q-type {
+            display: inline-block;
+            background: var(--gold);
+            color: var(--red);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .q-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--bg-dark);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+        }
+
+        .btn-option {
+            background: white;
+            border: 2px solid var(--green);
+            color: var(--green);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.2s;
+            font-family: 'Nunito', sans-serif;
+            position: relative; /* Đảm bảo nút nhận click */
+            z-index: 101;
+        }
+
+        .btn-option:hover:not([disabled]) {
+            background: var(--green);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-option.correct {
+            background: var(--green) !important;
+            color: white !important;
+            border-color: var(--green);
+        }
+
+        .btn-option.wrong {
+            background: var(--red) !important;
+            color: white !important;
+            border-color: var(--red);
+        }
+
+        .input-answer {
+            width: 70%;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 2px solid var(--green);
+            border-radius: 10px;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        .explanation {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f8f5;
+            border-left: 5px solid var(--green);
+            text-align: left;
+            border-radius: 5px;
+        }
+
+        .btn-control {
+            background: var(--red);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            margin-top: 20px;
+            font-family: 'Mountains of Christmas', cursive;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4);
+            transition: 0.3s;
+            position: relative;
+            z-index: 102;
+        }
+
+        .btn-control:hover { 
+            background: #a93226; 
+            transform: scale(1.05);
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* Nút nhạc */
+        .music-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 200; /* Nổi lên trên cùng */
+            font-size: 24px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            pointer-events: auto;
+        }
+        
+        /* Hiệu ứng tuyết */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: #fff;
+            z-index: 5;
+            animation: fall linear infinite;
+        }
+        @keyframes fall { to { transform: translateY(105vh); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="overlay"></div>
+    <div id="snow-container"></div>
+    
+    <div class="music-btn" onclick="toggleMusic()" title="Bật/Tắt nhạc">🔇</div>
+    <audio id="bg-music" loop>
+        <source src="https://commondatastorage.googleapis.com/codeskulptor-demos/riceracer_assets/music/win.ogg" type="audio/ogg">
+    </audio>
+
+    <div class="game-card">
+        <div id="start-screen" class="screen active">
+            <h1>🎄 Hóa Học 10<br>Giáng Sinh Vui Vẻ 🎅</h1>
+            <p style="font-size: 1.2rem; margin: 20px 0;">Ôn tập Học Kỳ 2 (Chương 4, 5, 6)<br>Kết Nối Tri Thức</p>
+            <p style="color: var(--red); font-weight: bold;">(Đã fix lỗi nút bấm!)</p>
+            <br>
+            <button class="btn-control" onclick="startGame()">Bắt Đầu Ngay 🎁</button>
+        </div>
+
+        <div id="play-screen" class="screen">
+            <div class="stats">
+                <span id="score">Điểm: 0</span>
+                <span id="progress">Câu: 1/50</span>
+            </div>
+
+            <div class="question-area">
+                <span class="q-type" id="q-type">Trắc nghiệm</span>
+                <div class="q-text" id="q-text">Đang tải câu hỏi...</div>
+                
+                <div id="options-container" class="options-grid"></div>
+                
+                <div id="input-container" style="display:none; margin-top:20px;">
+                    <input type="text" id="user-input" class="input-answer" placeholder="Nhập đáp án (ví dụ: +2, 4...)">
+                    <button class="btn-control" style="padding: 10px 20px; font-size: 1rem; font-family: 'Nunito', sans-serif;" onclick="checkShortAnswer()">Kiểm tra</button>
+                </div>
+            </div>
+
+            <div class="explanation" id="explanation">
+                <strong>Giải thích:</strong> <span id="exp-text"></span>
+            </div>
+
+            <button class="btn-control" id="next-btn" style="display:none;" onclick="nextQuestion()">Câu Tiếp Theo ➡️</button>
+        </div>
+
+        <div id="end-screen" class="screen">
+            <h1>🎉 Hoàn Thành! 🎉</h1>
+            <p style="font-size: 1.5rem;">Tổng điểm của bạn:</p>
+            <h2 style="font-size: 3rem; color: var(--green);" id="final-score">0</h2>
+            <p>Chúc bạn một mùa Giáng Sinh an lành và thi tốt!</p>
+            <button class="btn-control" onclick="location.reload()">Chơi Lại 🔄</button>
+        </div>
+    </div>
+
+<script>
+    // ================= DỮ LIỆU CÂU HỎI (50 CÂU ĐẦU TIÊN) =================
+    // Tôi đã trộn các câu hỏi từ các chương để bạn test ngay.
+    // Nếu muốn thêm đủ 300 câu, bạn chỉ cần paste thêm vào mảng này.
+    
+    const questions = [
+        // CHƯƠNG 4: OXI HÓA KHỬ
+        { type: "mc", question: "Dấu hiệu để nhận ra phản ứng oxi hóa - khử là dựa trên sự thay đổi đại lượng nào sau đây của nguyên tử?", options: ["Số mol", "Số oxi hóa", "Số khối", "Số hiệu nguyên tử"], correct: 1, explanation: "Phản ứng oxi hóa - khử là phản ứng hóa học trong đó có sự thay đổi số oxi hóa của một hay nhiều nguyên tố." },
+        { type: "mc", question: "Số oxi hóa của nguyên tử S trong ion SO₃²⁻ là bao nhiêu?", options: ["+2", "+4", "+6", "-2"], correct: 1, explanation: "Gọi x là số oxi hóa của S. Ta có: x + 3(-2) = -2 => x - 6 = -2 => x = +4." },
+        { type: "mc", question: "Chất bị oxi hóa trong phản ứng 2Na + 2H₂O → 2NaOH + H₂ là:", options: ["Na", "H₂O", "NaOH", "H₂"], correct: 0, explanation: "Na từ 0 lên +1 (nhường e) nên Na là chất khử (chất bị oxi hóa)." },
+        { type: "sa", question: "Số oxi hóa của Nitrogen trong NH₃ là bao nhiêu? (Nhập số kèm dấu, vd: -3)", correct: ["-3"], explanation: "H là +1 => x + 3(+1) = 0 => x = -3." },
+        { type: "tf", question: "Trong phản ứng oxi hóa - khử, chất khử là chất nhận electron.", correct: false, explanation: "Sai. Chất khử là chất nhường electron (số oxi hóa tăng)." },
+        { type: "mc", question: "Trong phản ứng: Fe + CuSO₄ → FeSO₄ + Cu, xảy ra quá trình gì?", options: ["Sự khử Fe²⁺", "Sự oxi hóa Cu", "Sự oxi hóa Fe", "Sự khử Cu"], correct: 2, explanation: "Fe từ 0 lên +2 nên xảy ra sự oxi hóa Fe." },
+        { type: "mc", question: "Nguyên tố Chromium (Cr) có số oxi hóa +6 trong hợp chất nào sau đây?", options: ["Cr(OH)₃", "Na₂CrO₄", "Cr₂O₃", "NaCrO₂"], correct: 1, explanation: "Trong Na₂CrO₄: 2(+1) + x + 4(-2) = 0 => x = +6." },
+        { type: "mc", question: "Chất nào sau đây chỉ có tính khử?", options: ["F₂", "S", "Na", "Cl₂"], correct: 2, explanation: "Kim loại Na luôn có xu hướng nhường e (tính khử)." },
+        { type: "sa", question: "Trong phản ứng S + H₂SO₄ đặc → SO₂ + H₂O, hệ số cân bằng tối giản của chất oxi hóa là bao nhiêu?", correct: ["2"], explanation: "S + 2H₂SO₄ → 3SO₂ + 2H₂O. Chất oxi hóa là H₂SO₄, hệ số là 2." },
+        { type: "mc", question: "Số oxi hóa của Mn trong KMnO₄ là:", options: ["+2", "+4", "+6", "+7"], correct: 3, explanation: "K(+1) + Mn(x) + 4O(-2) = 0 => x = +7." },
+        { type: "tf", question: "Phản ứng đốt cháy than (C + O₂ → CO₂) là phản ứng oxi hóa - khử.", correct: true, explanation: "Đúng. C từ 0 lên +4, O từ 0 xuống -2." },
+        { type: "mc", question: "Phản ứng nào sau đây KHÔNG phải là phản ứng oxi hóa - khử?", options: ["2Na + Cl₂ → 2NaCl", "Fe + 2HCl → FeCl₂ + H₂", "CaO + CO₂ → CaCO₃", "C + O₂ → CO₂"], correct: 2, explanation: "Phản ứng CaO + CO₂ → CaCO₃ không có sự thay đổi số oxi hóa." },
+        { type: "mc", question: "Trong phản ứng 2KMnO₄ + 16HCl → 2KCl + 2MnCl₂ + 5Cl₂ + 8H₂O, HCl đóng vai trò gì?", options: ["Chất oxi hóa", "Chất khử", "Môi trường", "Vừa khử vừa môi trường"], correct: 3, explanation: "HCl bị oxi hóa thành Cl₂ và tạo môi trường muối." },
+        
+        // CHƯƠNG 5: NĂNG LƯỢNG
+        { type: "mc", question: "Quy ước về dấu của biến thiên enthalpy chuẩn của phản ứng tỏa nhiệt là:", options: ["ΔrH < 0", "ΔrH > 0", "ΔrH = 0", "ΔrH ≥ 0"], correct: 0, explanation: "Phản ứng tỏa nhiệt có ΔrH < 0 (âm)." },
+        { type: "mc", question: "Điều kiện chuẩn đối với chất khí là áp suất 1 bar và nhiệt độ bao nhiêu?", options: ["0°C", "25°C (298K)", "100°C", "273K"], correct: 1, explanation: "Điều kiện chuẩn: 1 bar, 25°C." },
+        { type: "sa", question: "Enthalpy tạo thành chuẩn của các đơn chất bền vững nhất bằng bao nhiêu kJ/mol?", correct: ["0"], explanation: "Quy ước nhiệt tạo thành của đơn chất bền bằng 0." },
+        { type: "mc", question: "Cho phản ứng: 2H₂ + O₂ → 2H₂O, ΔrH = -571,6 kJ. Phản ứng này là:", options: ["Thu nhiệt", "Tỏa nhiệt", "Không đổi nhiệt", "Vừa thu vừa tỏa"], correct: 1, explanation: "ΔrH âm nên là phản ứng tỏa nhiệt." },
+        { type: "tf", question: "Phản ứng nhiệt phân CaCO₃ → CaO + CO₂ (cần đun nóng liên tục) là phản ứng thu nhiệt.", correct: true, explanation: "Đúng. Cần cung cấp nhiệt để phản ứng xảy ra." },
+        { type: "mc", question: "Công thức tính ΔrH của phản ứng dựa vào năng lượng liên kết (Eb) là:", options: ["∑Eb(sp) - ∑Eb(cđ)", "∑Eb(cđ) - ∑Eb(sp)", "∑Eb(cđ) + ∑Eb(sp)", "∑Eb(cđ) / ∑Eb(sp)"], correct: 1, explanation: "ΔrH = Tổng Eb(cđ) - Tổng Eb(sp)." },
+        { type: "mc", question: "Khi hòa tan vôi sống (CaO) vào nước, nước nóng lên. Đây là phản ứng:", options: ["Thu nhiệt", "Tỏa nhiệt", "Trung hòa", "Trao đổi"], correct: 1, explanation: "Nhiệt độ môi trường tăng lên chứng tỏ phản ứng tỏa nhiệt." },
+        { type: "sa", question: "Phản ứng có ΔrH > 0 được gọi là phản ứng gì?", correct: ["thu nhiệt"], explanation: "ΔrH dương nghĩa là hệ nhận nhiệt từ môi trường." },
+        { type: "mc", question: "Biến thiên enthalpy của phản ứng phụ thuộc vào yếu tố nào?", options: ["Nhiệt độ", "Áp suất", "Trạng thái chất", "Tất cả các ý trên"], correct: 3, explanation: "Enthalpy phụ thuộc vào điều kiện thực hiện phản ứng." },
+        { type: "tf", question: "Nhiệt tạo thành chuẩn của CO₂ chính là biến thiên enthalpy của phản ứng C(graphite) + O₂(g) → CO₂(g).", correct: true, explanation: "Đúng. Vì tạo ra 1 mol CO₂ từ các đơn chất bền." },
+
+        // CHƯƠNG 6: TỐC ĐỘ PHẢN ỨNG
+        { type: "mc", question: "Tốc độ phản ứng là đại lượng đặc trưng cho sự thay đổi yếu tố nào của chất trong một đơn vị thời gian?", options: ["Khối lượng", "Thể tích", "Nồng độ", "Nhiệt độ"], correct: 2, explanation: "Tốc độ phản ứng đặc trưng cho sự biến thiên nồng độ." },
+        { type: "mc", question: "Yếu tố nào sau đây KHÔNG ảnh hưởng đến tốc độ phản ứng của chất rắn?", options: ["Nhiệt độ", "Áp suất", "Diện tích bề mặt", "Chất xúc tác"], correct: 1, explanation: "Áp suất chỉ ảnh hưởng đáng kể đến phản ứng có chất khí." },
+        { type: "tf", question: "Khi tăng nhiệt độ, tốc độ phản ứng thường tăng lên.", correct: true, explanation: "Đúng. Nhiệt độ cao làm các hạt chuyển động nhanh hơn, va chạm hiệu quả hơn." },
+        { type: "mc", question: "Để than cháy nhanh hơn, người ta đập nhỏ than ra. Yếu tố ảnh hưởng ở đây là:", options: ["Nồng độ", "Nhiệt độ", "Diện tích bề mặt", "Áp suất"], correct: 2, explanation: "Đập nhỏ làm tăng diện tích bề mặt tiếp xúc của than với oxi." },
+        { type: "sa", question: "Chất làm tăng tốc độ phản ứng mà không bị tiêu hao sau phản ứng gọi là gì?", correct: ["chất xúc tác", "xúc tác"], explanation: "Định nghĩa chất xúc tác." },
+        { type: "mc", question: "Hệ số nhiệt độ Van't Hoff (γ) cho biết tốc độ phản ứng tăng bao nhiêu lần khi nhiệt độ tăng thêm:", options: ["1 độ C", "10 độ C", "100 độ C", "20 độ C"], correct: 1, explanation: "Quy tắc Van't Hoff áp dụng cho mỗi khoảng tăng 10 độ C." },
+        { type: "mc", question: "Thực phẩm bảo quản trong tủ lạnh giữ được lâu hơn là do yếu tố nào?", options: ["Nhiệt độ thấp", "Áp suất thấp", "Nồng độ thấp", "Chất xúc tác"], correct: 0, explanation: "Nhiệt độ thấp làm giảm tốc độ các phản ứng phân hủy." },
+        { type: "mc", question: "Đối với phản ứng có chất khí, khi tăng áp suất, tốc độ phản ứng tăng là do:", options: ["Nồng độ chất khí tăng", "Nồng độ chất khí giảm", "Nhiệt độ tăng", "Diện tích bề mặt tăng"], correct: 0, explanation: "Nén khí (tăng áp suất) làm giảm thể tích, dẫn đến nồng độ chất khí tăng." },
+        { type: "tf", question: "Chất ức chế làm tăng tốc độ phản ứng.", correct: false, explanation: "Sai. Chất ức chế làm giảm tốc độ phản ứng." },
+        { type: "mc", question: "Dùng nồi áp suất để ninh xương nhanh nhừ là ứng dụng của yếu tố:", options: ["Nồng độ", "Nhiệt độ", "Chất xúc tác", "Diện tích bề mặt"], correct: 1, explanation: "Nồi áp suất làm tăng nhiệt độ sôi của nước (trên 100°C)." },
+        
+        // CHƯƠNG 7: HALOGEN
+        { type: "mc", question: "Cấu hình electron lớp ngoài cùng của nhóm Halogen là:", options: ["ns²np³", "ns²np⁴", "ns²np⁵", "ns²np⁶"], correct: 2, explanation: "Halogen thuộc nhóm VIIA, có 7e lớp ngoài cùng." },
+        { type: "mc", question: "Ở điều kiện thường, Halogen nào ở thể lỏng?", options: ["Fluorine", "Chlorine", "Bromine", "Iodine"], correct: 2, explanation: "F₂, Cl₂ (khí); Br₂ (lỏng); I₂ (rắn)." },
+        { type: "sa", question: "Khi đun nóng, Iodine chuyển từ rắn sang hơi. Hiện tượng này gọi là gì?", correct: ["thăng hoa", "sự thăng hoa"], explanation: "Đây là tính chất vật lý đặc trưng của Iodine." },
+        { type: "mc", question: "Dung dịch acid nào dùng để khắc chữ lên thủy tinh?", options: ["HCl", "HBr", "HF", "HI"], correct: 2, explanation: "HF ăn mòn thủy tinh theo phản ứng: SiO₂ + 4HF → SiF₄ + 2H₂O." },
+        { type: "mc", question: "Trong các halogen, nguyên tố nào có tính oxi hóa mạnh nhất?", options: ["F₂", "Cl₂", "Br₂", "I₂"], correct: 0, explanation: "Tính oxi hóa giảm dần từ Fluorine đến Iodine." },
+        { type: "tf", question: "AgCl là kết tủa màu trắng.", correct: true, explanation: "Đúng. AgCl trắng, AgBr vàng nhạt, AgI vàng đậm." },
+        { type: "mc", question: "Nước Javel là hỗn hợp của các chất nào?", options: ["NaCl, NaClO", "HCl, HClO", "NaCl, KClO", "KCl, KClO"], correct: 0, explanation: "Cl₂ + 2NaOH → NaCl + NaClO + H₂O." },
+        { type: "mc", question: "Phản ứng nào chứng minh tính oxi hóa: Cl₂ > Br₂?", options: ["Cl₂ + 2NaBr → 2NaCl + Br₂", "Br₂ + 2NaCl → 2NaBr + Cl₂", "H₂ + Cl₂ → 2HCl", "Cl₂ + H₂O ⇌ HCl + HClO"], correct: 0, explanation: "Halogen mạnh đẩy halogen yếu hơn ra khỏi muối." },
+        { type: "sa", question: "Hợp chất AgI có màu gì?", correct: ["vàng", "màu vàng", "vàng đậm"], explanation: "Kết tủa Silver iodide (AgI) có màu vàng." },
+        { type: "mc", question: "Nguồn chính để điều chế Iodine trong công nghiệp là:", options: ["Nước biển", "Rong biển", "Quặng mỏ", "Không khí"], correct: 1, explanation: "Rong biển tích tụ I- với nồng độ cao." },
+        
+        // CÁC CÂU BỔ SUNG (CHO ĐỦ 50)
+        { type: "mc", question: "Số oxi hóa của O trong H₂O₂ là:", options: ["-2", "-1", "0", "+2"], correct: 1, explanation: "Trong peroxide, O có số oxi hóa -1." },
+        { type: "mc", question: "Phản ứng nhiệt nhôm: 2Al + Fe₂O₃ → Al₂O₃ + 2Fe. Al đóng vai trò là:", options: ["Chất oxi hóa", "Chất khử", "Môi trường", "Acid"], correct: 1, explanation: "Al từ 0 lên +3 (nhường e) nên là chất khử." },
+        { type: "tf", question: "Enzyme là chất xúc tác sinh học.", correct: true, explanation: "Đúng." },
+        { type: "mc", question: "Đơn vị thường dùng của tốc độ phản ứng là:", options: ["mol/L", "mol/(L.s)", "s/mol", "L/mol"], correct: 1, explanation: "Biến thiên nồng độ (M) trên thời gian (s)." },
+        { type: "sa", question: "Tên gọi của NaClO là gì? (Viết tiếng Việt: Natri ...)", correct: ["natri hypoclorit", "natri hypochlorit"], explanation: "Tên gọi của muối NaClO." },
+        { type: "mc", question: "Liên kết trong phân tử Cl₂ là liên kết:", options: ["Cộng hóa trị không cực", "Cộng hóa trị có cực", "Ion", "Kim loại"], correct: 0, explanation: "Hai nguyên tử giống nhau có độ âm điện bằng nhau." },
+        { type: "mc", question: "Kim loại nào sau đây tác dụng mãnh liệt với nước ở nhiệt độ thường?", options: ["Fe", "Cu", "Na", "Ag"], correct: 2, explanation: "Na là kim loại kiềm hoạt động mạnh." },
+        { type: "sa", question: "Để nhận biết ion Cl-, ta dùng dung dịch gì?", correct: ["agno3", "bạc nitrat"], explanation: "AgNO3 tạo kết tủa trắng AgCl." },
+        { type: "mc", question: "Chất nào sau đây được dùng để tráng phim ảnh?", options: ["AgBr", "AgCl", "AgF", "AgNO₃"], correct: 0, explanation: "AgBr nhạy cảm với ánh sáng." }
+    ];
+
+    // ================= LOGIC GAME =================
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let isPlaying = false;
+    const bgMusic = document.getElementById('bg-music');
+    const musicIcon = document.querySelector('.music-btn');
+
+    // Tạo hiệu ứng tuyết rơi
+    function createSnowflakes() {
+        const snowContainer = document.getElementById('snow-container');
+        const numberOfSnowflakes = 30; // Giảm số lượng để đỡ lag
+        
+        for (let i = 0; i < numberOfSnowflakes; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.innerHTML = '❄';
+            snowflake.style.left = Math.random() * 100 + '%';
+            snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            snowflake.style.opacity = Math.random();
+            snowflake.style.fontSize = (Math.random() * 15 + 10) + 'px';
+            snowContainer.appendChild(snowflake);
+        }
+    }
+    createSnowflakes();
+
+    function toggleMusic() {
+        if (isPlaying) {
+            bgMusic.pause();
+            musicIcon.innerText = '🔇';
+        } else {
+            bgMusic.play().catch(e => console.log("Cần tương tác để phát nhạc"));
+            musicIcon.innerText = '🎵';
+        }
+        isPlaying = !isPlaying;
+    }
+
+    function startGame() {
+        // Trộn câu hỏi
+        shuffleArray(questions);
+        score = 0;
+        currentQuestionIndex = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('play-screen').classList.add('active');
+        
+        // Tự động bật nhạc
+        if (!isPlaying) toggleMusic();
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const qData = questions[currentQuestionIndex];
+        
+        // Cập nhật thông tin
+        document.getElementById('progress').innerText = `Câu: ${currentQuestionIndex + 1}/${questions.length}`;
+        document.getElementById('score').innerText = `Điểm: ${score}`;
+        document.getElementById('q-text').innerText = qData.question;
+        
+        // Reset giao diện
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        document.getElementById('input-container').style.display = 'none';
+        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('user-input').value = '';
+
+        // Hiển thị theo loại câu hỏi
+        if (qData.type === 'mc') {
+            document.getElementById('q-type').innerText = "Trắc nghiệm";
+            optionsContainer.className = 'options-grid';
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswerMC(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        } 
+        else if (qData.type === 'tf') {
+            document.getElementById('q-type').innerText = "Đúng / Sai";
+            optionsContainer.className = 'options-grid';
+            
+            const btnTrue = document.createElement('button');
+            btnTrue.className = 'btn-option';
+            btnTrue.innerText = "Đúng";
+            btnTrue.onclick = () => checkAnswerTF(true, btnTrue);
+            
+            const btnFalse = document.createElement('button');
+            btnFalse.className = 'btn-option';
+            btnFalse.innerText = "Sai";
+            btnFalse.onclick = () => checkAnswerTF(false, btnFalse);
+
+            optionsContainer.appendChild(btnTrue);
+            optionsContainer.appendChild(btnFalse);
+        }
+        else if (qData.type === 'sa') {
+            document.getElementById('q-type').innerText = "Điền từ ngắn";
+            optionsContainer.className = ''; // Xóa grid layout
+            document.getElementById('input-container').style.display = 'block';
+        }
+    }
+
+    function checkAnswerMC(selectedIndex, btnElement) {
+        const qData = questions[currentQuestionIndex];
+        const allBtns = document.querySelectorAll('.btn-option');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === qData.correct) {
+            btnElement.classList.add('correct');
+            score += 10;
+        } else {
+            btnElement.classList.add('wrong');
+            allBtns[qData.correct].classList.add('correct'); // Hiện đáp án đúng
+        }
+        showExplanation(qData.explanation);
+    }
+
+    function checkAnswerTF(userChoice, btnElement) {
+        const qData = questions[currentQuestionIndex];
+        const allBtns = document.querySelectorAll('.btn-option');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        if (userChoice === qData.correct) {
+            btnElement.classList.add('correct');
+            score += 10;
+        } else {
+            btnElement.classList.add('wrong');
+            // Tìm nút đúng để highlight
+            allBtns.forEach(btn => {
+                if((btn.innerText === "Đúng" && qData.correct) || (btn.innerText === "Sai" && !qData.correct)) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
+        showExplanation(qData.explanation);
+    }
+
+    function checkShortAnswer() {
+        const qData = questions[currentQuestionIndex];
+        const userInput = document.getElementById('user-input').value.trim().toLowerCase();
+        const btn = document.querySelector('#input-container button');
+        const inputField = document.getElementById('user-input');
+        
+        if(userInput === "") return; // Không làm gì nếu trống
+
+        btn.disabled = true;
+        inputField.disabled = true;
+
+        if (qData.correct.includes(userInput)) {
+            score += 10;
+            inputField.style.borderColor = "var(--green)";
+            inputField.style.backgroundColor = "#d4edda";
+            showExplanation("Chính xác! " + qData.explanation);
+        } else {
+            inputField.style.borderColor = "var(--red)";
+            inputField.style.backgroundColor = "#f8d7da";
+            showExplanation(`Sai rồi. Đáp án là: ${qData.correct[0]}. ${qData.explanation}`);
+        }
+    }
+
+    function showExplanation(text) {
+        const expBox = document.getElementById('explanation');
+        document.getElementById('exp-text').innerText = text;
+        expBox.style.display = 'block';
+        
+        // Cập nhật điểm ngay lập tức
+        document.getElementById('score').innerText = `Điểm: ${score}`;
+        
+        // Hiện nút tiếp theo
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            endGame();
+        }
+    }
+
+    function endGame() {
+        document.getElementById('play-screen').classList.remove('active');
+        document.getElementById('end-screen').classList.add('active');
+        document.getElementById('final-score').innerText = `${score} / ${questions.length * 10}`;
+    }
+
+    // Hàm trộn mảng
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+</script>
+</body>
+</html>
